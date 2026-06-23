@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Startup Validator - Instant Idea Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #18181f;
+      --border: #2a2a35;
+      --accent: #7c6aff;
+      --accent2: #a78bfa;
+      --green: #34d399;
+      --red: #f87171;
+      --yellow: #fbbf24;
+      --blue: #60a5fa;
+      --text: #f0f0f5;
+      --muted: #888899;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    header {
+      padding: 40px 24px 0;
+      text-align: center;
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #7c6aff22, #a78bfa11);
+      border: 1px solid #7c6aff44;
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #fff 30%, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+
+    .tagline {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 560px;
+      margin: 0 auto 40px;
+    }
+
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    .input-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 32px;
+    }
+
+    .input-card label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      padding: 14px 16px;
+      resize: vertical;
+      min-height: 140px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus { border-color: var(--accent); }
+    textarea::placeholder { color: var(--muted); }
+
+    .helper-text {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-top: 10px;
+    }
+
+    .api-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 18px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .mode-pill {
+      font-size: 0.8rem;
+      color: var(--blue);
+      border: 1px solid #60a5fa44;
+      background: #60a5fa12;
+      border-radius: 999px;
+      padding: 7px 12px;
+    }
+
+    .btn-analyze {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 28px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.2s, transform 0.15s;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-analyze:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+    .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    .loading.active { display: block; }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading p {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .error-box {
+      display: none;
+      background: #f8717115;
+      border: 1px solid #f8717144;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      color: var(--red);
+      margin-bottom: 24px;
+      font-size: 0.9rem;
+    }
+
+    .error-box.active { display: block; }
+
+    #results { display: none; }
+    #results.active { display: block; }
+
+    .score-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(135deg, #7c6aff18, #a78bfa0c);
+      border: 1px solid #7c6aff33;
+      border-radius: var(--radius);
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .score-left h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .score-left p {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .score-circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: conic-gradient(var(--accent) 0%, var(--border) 0%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .score-circle::before {
+      content: '';
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      background: var(--surface);
+      border-radius: 50%;
+    }
+
+    .score-num {
+      position: relative;
+      z-index: 1;
+      color: var(--accent2);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot-green { background: var(--green); }
+    .dot-red { background: var(--red); }
+    .dot-yellow { background: var(--yellow); }
+    .dot-blue { background: var(--blue); }
+    .dot-purple { background: var(--accent2); }
+
+    .tag-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .tag {
+      font-size: 0.85rem;
+      color: var(--muted);
+      padding: 6px 10px;
+      background: var(--surface2);
+      border-radius: 7px;
+      border-left: 3px solid transparent;
+    }
+
+    .tag.green { border-color: var(--green); color: #d1fae5; }
+    .tag.red { border-color: var(--red); color: #fecaca; }
+    .tag.yellow { border-color: var(--yellow); color: #fef3c7; }
+    .tag.blue { border-color: var(--blue); color: #dbeafe; }
+
+    .market-card {
+      margin-bottom: 16px;
+    }
+
+    .market-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 4px;
+    }
+
+    .market-item {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .market-item .mi-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 6px;
+    }
+
+    .market-item .mi-value {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .competitor-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px;
+      background: var(--surface2);
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .competitor-item:last-child { margin-bottom: 0; }
+
+    .comp-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .comp-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
+
+    .comp-diff {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .verdict-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .verdict-badge.strong { background: #34d39922; color: var(--green); border: 1px solid #34d39944; }
+    .verdict-badge.promising { background: #60a5fa22; color: var(--blue); border: 1px solid #60a5fa44; }
+    .verdict-badge.risky { background: #f8717122; color: var(--red); border: 1px solid #f8717144; }
+    .verdict-badge.niche { background: #fbbf2422; color: var(--yellow); border: 1px solid #fbbf2444; }
+
+    .summary-text {
+      font-size: 0.9rem;
+      color: var(--muted);
+      line-height: 1.65;
+      padding: 14px;
+      background: var(--surface2);
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+
+    .btn-reset {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 10px;
+      padding: 10px 22px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      display: block;
+      margin: 24px auto 0;
+    }
+
+    .btn-reset:hover { border-color: var(--accent); color: var(--text); }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo-badge">No Setup</div>
+  <h1>Startup Validator</h1>
+  <p class="tagline">Paste your idea and get instant startup feedback directly in the browser. No API key, no backend, no installs.</p>
+</header>
+
+<main>
+  <div class="input-card">
+    <label for="ideaInput">Your Startup Idea</label>
+    <textarea
+      id="ideaInput"
+      placeholder="e.g. A platform that helps college students find affordable weekend skill-based internships with AI matching and verified startup partners..."
+    ></textarea>
+    <p class="helper-text">Tip: include who it helps, what problem it solves, and how it will make money.</p>
+
+    <div class="api-row">
+      <span class="mode-pill">Browser-only analysis</span>
+      <button class="btn-analyze" id="analyzeBtn" onclick="analyze()">
+        Analyze Idea ->
+      </button>
+    </div>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>Reviewing your idea...</p>
+  </div>
+
+  <div id="results">
+    <div class="score-banner">
+      <div class="score-left">
+        <h2 id="verdictTitle">Analysis Complete</h2>
+        <p id="verdictSub">Overall startup viability score</p>
+      </div>
+      <div class="score-circle" id="scoreCircle">
+        <span class="score-num" id="scoreNum">-</span>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title"><span class="dot dot-green"></span> Strengths</div>
+        <div class="tag-list" id="strengths"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot dot-red"></span> Weaknesses</div>
+        <div class="tag-list" id="weaknesses"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot dot-blue"></span> Opportunities</div>
+        <div class="tag-list" id="opportunities"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot dot-yellow"></span> Threats</div>
+        <div class="tag-list" id="threats"></div>
+      </div>
+    </div>
+
+    <div class="card market-card">
+      <div class="card-title"><span class="dot dot-purple"></span> Market Potential</div>
+      <div class="market-grid" id="marketGrid"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title"><span class="dot dot-blue"></span> Competitor Landscape</div>
+      <div id="competitors"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="dot dot-purple"></span> Feedback & Improvements</div>
+      <div id="verdictBadge"></div>
+      <div class="summary-text" id="summaryText"></div>
+      <div style="margin-bottom:12px;">
+        <div class="card-title" style="margin-bottom:10px;"><span class="dot dot-green"></span> Recommended Improvements</div>
+        <div class="tag-list" id="improvements"></div>
+      </div>
+      <div>
+        <div class="card-title" style="margin-bottom:10px;"><span class="dot dot-yellow"></span> Quick Wins</div>
+        <div class="tag-list" id="quickWins"></div>
+      </div>
+    </div>
+
+    <button class="btn-reset" onclick="reset()">Analyze Another Idea</button>
+  </div>
+</main>
+
+<footer>
+  Frontend-only startup validator running entirely in your browser
+</footer>
+
+<script>
+  function show(id) { document.getElementById(id).classList.add('active'); }
+  function hide(id) { document.getElementById(id).classList.remove('active'); }
+  function setHTML(id, html) { document.getElementById(id).innerHTML = html; }
+
+  function tagsHTML(items, colorClass) {
+    return items.map(t => `<div class="tag ${colorClass}">${t}</div>`).join('');
+  }
+
+  function setScore(score) {
+    const pct = (score / 10) * 100;
+    const circle = document.getElementById('scoreCircle');
+    circle.style.background = `conic-gradient(var(--accent) ${pct}%, var(--border) 0%)`;
+    document.getElementById('scoreNum').textContent = score;
+  }
+
+  function verdictClass(v) {
+    const lower = (v || '').toLowerCase();
+    if (lower.includes('strong')) return 'strong';
+    if (lower.includes('promis')) return 'promising';
+    if (lower.includes('risky')) return 'risky';
+    if (lower.includes('niche')) return 'niche';
+    return 'promising';
+  }
+
+  function normalizeIdea(idea) {
+    return idea.toLowerCase().replace(/\s+/g, ' ').trim();
+  }
+
+  function countMatches(text, keywords) {
+    return keywords.reduce((count, keyword) => count + (text.includes(keyword) ? 1 : 0), 0);
+  }
+
+  function detectAudience(text) {
+    const patterns = [
+      { keywords: ['students', 'college', 'campus'], label: 'Students and young professionals' },
+      { keywords: ['doctor', 'patient', 'hospital', 'clinic', 'health'], label: 'Healthcare providers and patients' },
+      { keywords: ['farmer', 'agriculture', 'crop'], label: 'Farmers and agribusinesses' },
+      { keywords: ['startup', 'founder', 'small business', 'sme'], label: 'Startups and small businesses' },
+      { keywords: ['teacher', 'school', 'education', 'learning'], label: 'Schools, teachers, and learners' },
+      { keywords: ['freelancer', 'creator', 'agency'], label: 'Freelancers, creators, and service teams' },
+      { keywords: ['shop', 'ecommerce', 'retail', 'store'], label: 'Retail brands and online sellers' }
+    ];
+
+    const match = patterns.find(item => item.keywords.some(keyword => text.includes(keyword)));
+    return match ? match.label : 'A focused early-adopter niche that strongly feels the problem';
+  }
+
+  function detectRevenueModel(text) {
+    if (text.includes('subscription') || text.includes('saas') || text.includes('monthly')) {
+      return 'Subscription-based recurring revenue';
+    }
+    if (text.includes('marketplace') || text.includes('commission')) {
+      return 'Marketplace commission or transaction fee model';
+    }
+    if (text.includes('platform') || text.includes('software') || text.includes('tool')) {
+      return 'Tiered SaaS pricing with premium features';
+    }
+    if (text.includes('service') || text.includes('consult')) {
+      return 'Service revenue with add-on retainers or audits';
+    }
+    return 'Start with a simple paid plan, then expand into premium tiers or B2B packages';
+  }
+
+  function suggestCompetitors(text) {
+    const buckets = [
+      { keywords: ['education', 'student', 'learning'], names: ['Coursera', 'Udemy', 'Internshala'] },
+      { keywords: ['health', 'doctor', 'patient'], names: ['Practo', 'Teladoc', 'Doctolib'] },
+      { keywords: ['finance', 'payment', 'loan'], names: ['Stripe', 'PayPal', 'Razorpay'] },
+      { keywords: ['freelancer', 'gig', 'creator'], names: ['Upwork', 'Fiverr', 'Contra'] },
+      { keywords: ['ecommerce', 'retail', 'shop'], names: ['Shopify', 'Amazon', 'Meesho'] },
+      { keywords: ['farmer', 'agriculture', 'crop'], names: ['CropIn', 'DeHaat', 'Climate FieldView'] }
+    ];
+
+    const match = buckets.find(item => item.keywords.some(keyword => text.includes(keyword)));
+    const names = match ? match.names : ['Notion', 'HubSpot', 'Zoho'];
+    return names.map(name => ({
+      name,
+      differentiator: 'Your edge should be sharper positioning, faster onboarding, and a clearer value promise for one specific customer segment.'
+    }));
+  }
+
+  function uniqueList(items, minCount) {
+    const seen = new Set();
+    const result = [];
+    for (const item of items) {
+      if (item && !seen.has(item)) {
+        seen.add(item);
+        result.push(item);
+      }
+      if (result.length >= minCount) break;
+    }
+    return result;
+  }
+
+  function analyzeIdeaLocally(idea) {
+    const text = normalizeIdea(idea);
+    const wordCount = idea.trim().split(/\s+/).filter(Boolean).length;
+
+    const techSignals = countMatches(text, ['ai', 'automation', 'platform', 'app', 'software', 'data']);
+    const businessSignals = countMatches(text, ['subscription', 'marketplace', 'b2b', 'revenue', 'pricing', 'commission']);
+    const claritySignals = countMatches(text, ['for', 'helps', 'solves', 'connects', 'improves', 'reduces']);
+    const riskSignals = countMatches(text, ['blockchain', 'crypto', 'social network', 'everyone', 'all businesses']);
+    const specificityBonus = wordCount > 20 ? 1 : 0;
+
+    let score = 4 + Math.min(techSignals, 2) + Math.min(businessSignals, 2) + Math.min(claritySignals, 2) + specificityBonus - Math.min(riskSignals, 2);
+    score = Math.max(3, Math.min(score, 9));
+
+    let verdict = 'Promising';
+    if (score >= 8) verdict = 'Strong';
+    else if (score <= 4) verdict = 'Risky';
+    else if (score === 5) verdict = 'Niche';
+
+    const strengths = uniqueList([
+      techSignals > 0 ? 'Uses technology to create leverage and make the product easier to scale.' : '',
+      businessSignals > 0 ? 'Shows at least one visible path to monetization.' : '',
+      claritySignals > 0 ? 'Communicates a practical customer problem rather than just a vague concept.' : '',
+      wordCount > 18 ? 'Idea description has enough detail to test with real users quickly.' : '',
+      'Can be validated with a lightweight MVP before heavy investment.'
+    ], 4);
+
+    const weaknesses = uniqueList([
+      wordCount < 15 ? 'The idea is still too broad and needs tighter positioning.' : '',
+      businessSignals === 0 ? 'Revenue model is not yet obvious from the concept.' : '',
+      countMatches(text, ['students', 'freelancer', 'creator', 'consumer']) > 0 ? 'Customer acquisition may be expensive if trust and retention are weak.' : '',
+      riskSignals > 0 ? 'The pitch risks sounding trend-led unless the user pain is very concrete.' : '',
+      'Execution quality and differentiation will matter more than the concept alone.'
+    ], 4);
+
+    const opportunities = uniqueList([
+      'Start with one narrow audience and expand after proving retention.',
+      techSignals > 0 ? 'Automation features can create a stronger value gap versus manual alternatives.' : 'A simple digital workflow can replace fragmented manual processes.',
+      businessSignals > 0 ? 'Clear packaging and pricing could help convert early adopters faster.' : 'Testing multiple pricing formats can reveal a better business model quickly.',
+      'Pilot programs, waitlists, and concierge onboarding can validate demand with low cost.'
+    ], 4);
+
+    const threats = uniqueList([
+      'Larger incumbents can copy promising features if your niche is not defensible.',
+      'Users may say they want the product but still resist changing existing habits.',
+      score <= 5 ? 'Weak initial positioning could make marketing expensive and inconsistent.' : '',
+      'If onboarding is too slow, early interest may not turn into repeat usage.'
+    ], 4);
+
+    const audience = detectAudience(text);
+    const revenueModel = detectRevenueModel(text);
+    const tam = score >= 8
+      ? 'Potentially large if the niche expands into adjacent customer segments.'
+      : score >= 6
+        ? 'Moderate to strong if the first target segment is well defined.'
+        : 'Unclear today; depends on finding a sharper niche and repeatable demand.';
+    const growthRate = techSignals > 0
+      ? 'Likely above-average if adoption is tied to workflow automation or cost savings.'
+      : 'Moderate, with growth depending heavily on execution and word-of-mouth.';
+
+    const improvements = uniqueList([
+      'Rewrite the pitch as: customer + problem + solution + why now.',
+      'Define one measurable promise, like saving time, increasing revenue, or reducing errors.',
+      'Test with 10 target users before adding too many features.',
+      businessSignals === 0 ? 'Choose a clear first pricing model before building too much.' : ''
+    ], 4);
+
+    const quickWins = uniqueList([
+      'Create a one-line value proposition and landing page.',
+      'List your top three user assumptions and test them with interviews this week.',
+      'Sketch the simplest MVP that proves demand in under two weeks.'
+    ], 3);
+
+    const summary = `This idea looks ${verdict.toLowerCase()} based on how clearly it identifies a customer problem, a delivery model, and a possible revenue path. The strongest next move is to narrow the audience, sharpen the promise, and test interest quickly before building a large product.`;
+
+    return {
+      swot: {
+        strengths,
+        weaknesses,
+        opportunities,
+        threats
+      },
+      market_potential: {
+        tam,
+        growth_rate: growthRate,
+        target_audience: audience,
+        revenue_model: revenueModel,
+        score
+      },
+      competitors: suggestCompetitors(text),
+      feedback: {
+        overall_score: score,
+        verdict,
+        improvements,
+        quick_wins: quickWins,
+        summary
+      }
+    };
+  }
+
+  async function analyze() {
+    const idea = document.getElementById('ideaInput').value.trim();
+
+    hide('errorBox');
+    hide('results');
+
+    if (!idea) {
+      document.getElementById('errorBox').textContent = 'Please enter a startup idea.';
+      show('errorBox');
+      return;
+    }
+
+    document.getElementById('analyzeBtn').disabled = true;
+    show('loading');
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const data = analyzeIdeaLocally(idea);
+      hide('loading');
+      renderResults(data);
+    } catch (err) {
+      hide('loading');
+      document.getElementById('errorBox').textContent = 'Something went wrong while analyzing the idea.';
+      show('errorBox');
+    } finally {
+      document.getElementById('analyzeBtn').disabled = false;
+    }
+  }
+
+  function renderResults(d) {
+    const swot = d.swot || {};
+    setHTML('strengths', tagsHTML(swot.strengths || [], 'green'));
+    setHTML('weaknesses', tagsHTML(swot.weaknesses || [], 'red'));
+    setHTML('opportunities', tagsHTML(swot.opportunities || [], 'blue'));
+    setHTML('threats', tagsHTML(swot.threats || [], 'yellow'));
+
+    const mp = d.market_potential || {};
+    const marketItems = [
+      { label: 'TAM', value: mp.tam || '-' },
+      { label: 'Growth Rate', value: mp.growth_rate || '-' },
+      { label: 'Target Audience', value: mp.target_audience || '-' },
+      { label: 'Revenue Model', value: mp.revenue_model || '-' }
+    ];
+    setHTML('marketGrid', marketItems.map(m =>
+      `<div class="market-item">
+         <div class="mi-label">${m.label}</div>
+         <div class="mi-value">${m.value}</div>
+       </div>`
+    ).join(''));
+
+    const comps = d.competitors || [];
+    setHTML('competitors', comps.map(c =>
+      `<div class="competitor-item">
+         <div class="comp-icon">${(c.name || '?')[0].toUpperCase()}</div>
+         <div>
+           <div class="comp-name">${c.name || '-'}</div>
+           <div class="comp-diff">${c.differentiator || ''}</div>
+         </div>
+       </div>`
+    ).join(''));
+
+    const fb = d.feedback || {};
+    const score = fb.overall_score || mp.score || 5;
+    setScore(score);
+
+    document.getElementById('verdictTitle').textContent = fb.verdict || 'Analysis Complete';
+    document.getElementById('verdictSub').textContent = `Overall startup viability: ${score}/10`;
+
+    setHTML('verdictBadge',
+      `<span class="verdict-badge ${verdictClass(fb.verdict)}">${fb.verdict || 'Analyzed'}</span>`);
+    setHTML('summaryText', fb.summary || '');
+    setHTML('improvements', tagsHTML(fb.improvements || [], 'blue'));
+    setHTML('quickWins', tagsHTML(fb.quick_wins || [], 'yellow'));
+
+    show('results');
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function reset() {
+    hide('results');
+    hide('errorBox');
+    document.getElementById('ideaInput').value = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  document.getElementById('ideaInput').addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'Enter') analyze();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+# Build artifacts
+backend/build/
+backend/_deps/
+*.o
+*.a
+*.so
+*.exe
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Env / secrets
+.env
+*.env
+
+# macOS
+.DS_Store
+
+# CMake cache
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
